@@ -427,3 +427,99 @@ print(d + relativedelta(weekday=FR(-1)))  # Last Friday
 
 
 # 3.14 Finding the Date Range for the Current Month
+from datetime import datetime, date, timedelta
+import calendar
+
+def get_month_range(start_date=None):
+    if start_date is None:
+        start_date = date.today().replace(day=1)
+        print('start_date: ', start_date)
+    else:
+            start_date = start_date.replace(day=1)
+
+    _, days_in_month = calendar.monthrange(start_date.year, start_date.month)
+    print('days_in_month: ', _, days_in_month)
+    end_date = start_date + timedelta(days=days_in_month)
+    return (start_date, end_date)
+
+a_day = timedelta(days=1)
+input_date = date(2019, 3, 20)
+first_day, last_day = get_month_range(input_date)
+while first_day < last_day:
+    print(first_day)
+    first_day += a_day
+
+def date_range(start, stop, step):
+    while start < stop:
+        yield start
+        start += step
+
+for d in date_range(datetime(2012, 9, 1), datetime(2012,10,1), timedelta(hours=12)):
+    print(d)
+
+def date_range(start, stop, step):
+    while start < (stop + timedelta(days=1)):
+        yield start
+        start += step
+
+for d in date_range(date(2012, 9, 1), date(2012,9,30), timedelta(days=1)):
+    print(d)
+
+
+# 3.15 Converting Strings into Datetimes
+# datetime.strptime()
+# datetime.strftime()
+from datetime import datetime
+text = '2020-03-08'
+y = datetime.strptime(text, '%Y-%m-%d')
+z = datetime.now()
+x = datetime.today()
+
+diff = z - y
+print(diff)
+
+diff1= x - y
+print(diff1)
+
+print(z)
+nice_z = datetime.strftime(z, '%A %B %d %Y')
+print(nice_z)
+
+# This function runs over seven times faster than datetime.strptime().
+from datetime import datetime
+def parse_ymd(s):
+    year_s, mon_s, day_s = s.split('-')
+    return datetime(int(year_s), int(mon_s), int(day_s))
+print(parse_ymd('2020-03-20'))
+
+
+# 3.16 Manipulating Dates Involving Time Zones
+# You had a conference call scheduled for December 21, 2012, at 9:30 a.m in Chicago.
+# 다른 곳에 있는 참여자들의 local time ?
+# pytz module
+from datetime import datetime
+from pytz import timezone
+d = datetime(2012, 12, 21, 9, 30, 0)
+print(d)
+
+central = timezone('US/Central')   # Localize the date for Chicago
+loc_d = central.localize(d)
+print(loc_d)
+
+bang_d = loc_d.astimezone(timezone('Asia/Kolkata'))
+print(bang_d)
+
+# Consider Daylight saving time
+d = datetime(2013, 3, 10, 1, 45)
+loc_d = central.localize(d)
+print(loc_d)
+later = loc_d + timedelta(minutes=30)
+print(later)    # Wrong Result
+
+from datetime import timedelta
+later = central.normalize(loc_d + timedelta(minutes=30))
+print(later)
+
+#print(loc_d)
+#utc_d = loc_d.astimezone(pytz.utc)
+#print(utc_d)
