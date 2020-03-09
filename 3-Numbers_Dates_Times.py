@@ -183,6 +183,247 @@ print(cmath.sqrt(-1))
 
 
 # 3.7 Working with Infinity and NaNs
+a = float('inf')
+b = float('-inf')
+c = float('nan')
+print(a, b, c)
+
+# math.isinf(), math.isnan()
+print(math.isinf(a))
+print(math.isinf(b))
+print(math.isnan(c))
+
+a = float('inf')
+print(a+45)
+print(a*10)
+print(10/a)
+
+a = float('inf')
+print(a/a)
+b = float('-inf')
+print(a+b)
+
+c = float('nan')
+print(c+23)
+print(c/2)
+print(c*2)
+print(math.sqrt(c))
+
+c = float('nan')
+d = float('nan')
+print(c==d)
+print(c is d)
 
 
+# 3.8 Calculating with Fractions(분수)
+# fractions module
+from fractions import Fraction
+a = Fraction(5, 4)
+b = Fraction(7, 16)
+print(a+b)      # 5/4 + 7/16
+print(a*b)      # 5/4 * 7/16
 
+c = a * b         # Getting numerator(분자)/denominator(분모)
+print(c.numerator)
+print(c.denominator)
+print(float(c))   # Converting to a float
+print(c.limit_denominator(8)) # Limiting the denominator of a value
+
+x = 3.75
+y = Fraction(*x.as_integer_ratio())
+print(y)
+
+
+# 3.9 Calculating with Large Numerical Arrays
+x = [1, 2, 3, 4]
+y = [5, 6, 7, 8]
+print(x*2)       # List의 곱은 문자열처럼 동작
+try:
+    print(x+10)
+except TypeError as e:
+    print('Error Occured: ', e)
+print(x+y)       # 문자열 처럼 동작: 리스트의 item이 뒤에 붙음.
+
+import numpy as np
+ax = np.array([1, 2, 3, 4])
+ay = np.array([5, 6, 7, 8])
+print(ax*2)
+print(ax+10)
+print(ax+ay)
+print(ax*ay)
+
+def f(x):
+    return 3*x**2 - 2*x + 7
+print(f(ax))
+
+print(np.sqrt(ax))
+print(np.cos(ax))
+
+grid = np.zeros(shape=(10000,10000), dtype=float)
+print(grid)
+grid += 10
+print(grid)
+print(np.sin(grid))
+
+a = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+print(a)
+print(a[1])
+print(a[:,1])
+print(a[1:3, 1:3])
+print(a[1:3, 1:3]+10)
+print(a)
+
+a = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+print(a+[100, 101, 102, 103])
+print('')
+print(a)
+print(np.where(a<10, a, 10))
+
+
+# 3.10 Performing Matrix(행렬) and Linear Algebra(선형대수학) Calculations
+import numpy as np
+m = np.array([[1, -2, 3], [0, 4, 5], [7, 8, -9]])
+print(m)
+print(m.T)     # Transpose
+#print(m.I)     # Inverse    Error Occured
+v = np.array([[2], [3], [4]])
+print(m)
+print(v)
+print(m*v)   # 단순 multiply
+print(m@v)   # Dot Product
+
+import numpy.linalg
+print(numpy.linalg.det(m))  # Determinant
+print(numpy.linalg.eigvals(m))  # Eigenvalues(고윳값, 고유치)
+
+print(m)
+print(v)
+x = numpy.linalg.solve(m, v)
+print(x)
+print(m@x)
+
+
+# 3.11 Picking Things at Random
+import random
+values = [1, 2, 3, 4, 5, 6]
+print(random.choice(values))
+
+# random.sample() : To take a sampling of N items
+print(random.sample(values, 2))
+print(random.sample(values, 2))
+print(random.sample(values, 3))
+print(random.sample(values, 3))
+
+# random.shuffle()
+print(values)
+random.shuffle(values)
+print(values)
+random.shuffle(values)
+print(values)
+
+# randint()
+print(random.randint(0, 10))  # 0 ~ 10 random number
+print(random.randint(0, 10))
+
+# random.random(): range 0 ~ 1, uniform floating-point values
+print(random.random())
+print(random.random())
+print(random.random())
+
+# random.getrandbits(): To get N random-bits expressed as an integer,
+print(random.getrandbits(200))
+
+# random module computs randdom number using the Mersenne Twister algorithm.
+# You can alter the initial seed by using the random.seed()
+random.seed()             # Seed based on system time or os.urandom()
+random.seed(12345)        # Seed based on integer given
+random.seed(b'bytedata')  # Seed based on byte data
+
+# random.uniform(), random.gauss(), ssl_RAND_bytes()
+
+
+# 3.12 Converting Days to Seconds, and Other Basic Time Conversions
+from datetime import timedelta
+a = timedelta(days=2, hours=6)
+b = timedelta(hours=4.5)
+c = a + b
+print(c)
+print(c.days)
+print(c.seconds)
+print(c.seconds/3600)
+print(c.total_seconds()/3600)
+
+from datetime import datetime
+a = datetime(2012, 9, 23)
+print(a + timedelta(days=10))
+b = datetime(2012, 12, 21)
+d = b - a
+print(d)
+print(d.days)
+
+now = datetime.today()
+print(now)
+print(now + timedelta(minutes=10))
+
+a = datetime(2012, 3, 1)
+b = datetime(2012, 2, 28)    # 2012.2.29 있음
+print((a-b).days)
+
+c = datetime(2013, 3, 1)
+d = datetime(2013, 2, 28)    # 2013.2.29 없음
+print((c-d).days)
+
+a = datetime(2012, 9, 23)
+try:
+    print(a + timedelta(months=1))
+except TypeError as e:
+    print(e)
+
+from dateutil.relativedelta import relativedelta
+a = datetime(2012, 9, 23)
+print(a)
+print(a+relativedelta(months=+1))
+print(a + relativedelta(months=+4))
+
+# Time between two dates
+a = datetime(2012, 9, 23)
+b = datetime(2012, 12, 21)
+d = b -a
+print(d)
+d = relativedelta(b, a)
+print(d, d.months, d.days)
+
+
+# 3.13 Determining Last Friday's Date
+from datetime import datetime, timedelta
+weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday',
+            'Friday', 'Saturday', 'Sunday']
+def get_previous_byday(dayname, start_date=None):
+    if start_date is None:
+        start_date = datetime.today()
+    day_num = start_date.weekday()
+    print('day_num: ', day_num)
+    day_num_target = weekdays.index(dayname)
+    print('day_num_target: ', day_num_target)
+    days_ago = (7 + day_num - day_num_target) % 7
+    if days_ago == 0:
+        days_ago = 7
+    target_date = start_date - timedelta(days=days_ago)
+    return target_date
+print(datetime.today())
+print(get_previous_byday('Sunday'))
+print(get_previous_byday('Sunday', datetime(2012, 12, 21)))
+
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from dateutil.rrule import *
+d = datetime.now()
+k = datetime.today()
+print(d)
+print(k)
+
+print(d + relativedelta(weekday=FR))  # Next Friday
+print(d + relativedelta(weekday=FR(-1)))  # Last Friday
+
+
+# 3.14 Finding the Date Range for the Current Month
