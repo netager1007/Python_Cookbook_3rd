@@ -534,5 +534,318 @@ print(os.path.getmtime('test.txt'))
 import time
 print(time.ctime(os.path.getmtime('test.txt')))
 
+# Discussion
+# File testing is a straightforward operation using os.path. Probably the only thing to be
+# aware of when writing scripts is that you might need to worry about permissions—
+# especially for operations that get metadata. For example:
+
+# os.path.getsize('/Users/guido/Desktop/foo.txt')
+# Traceback (most recent call last):
+# File "<stdin>", line 1, in <module>
+# File "/usr/local/lib/python3.3/genericpath.py", line 49, in getsize
+# return os.stat(filename).st_size
+# PermissionError: [Errno 13] Permission denied: '/Users/guido/Desktop/foo.txt'
+
+
+# 5.13 Getting a Directory Listing
+
+# Problem
+# You want to get a list of the files contained in a directory on the filesystem.
+
+# Solution
+# Use the os.listdir() function to obtain a list of files in a directory:
+import os
+names = os.listdir('c:\\users')
+print(names)
+
+# This will give you the raw directory listing, including all files, subdirectories, symbolic
+# links, and so forth. If you need to filter the data in some way, consider using a list
+# comprehension combined with various functions in the os.path library. For example:
+import os.path
+target_dir = 'c:\\users\\jbb'
+names = [name for name in os.listdir(target_dir)                # Get all regular files
+         if os.path.isfile(os.path.join(target_dir, name))]
+print('Regular Files:', names)
+
+names = [name for name in os.listdir(target_dir)                # Get all dirs
+         if os.path.isdir(os.path.join(target_dir, name))]
+print('Directories:', names)
+
+# The startswith() and endswith() methods of strings can be useful for filtering the
+# contents of a directory as well. For example:
+pyfiles = [name for name in os.listdir(target_dir)                # End with .py
+         if name.endswith('.py')]
+print('Python Files:', pyfiles)
+
+# For filename matching, you may want to use the glob or fnmatch modules instead. For
+# example:
+import glob
+pyfiles = glob.glob(target_dir + '\\*.py')
+print('[glob] Python Files:', pyfiles)
+
+from fnmatch import fnmatch
+pyfiles = [name for name in os.listdir(target_dir)                # End with .py
+        if fnmatch(name, '*.py')]
+print('[fnmatch] Python Files:', pyfiles)
+
+
+# Discussion
+# Getting a directory listing is easy, but it only gives you the names of entries in the
+# directory. If you want to get additional metadata, such as file sizes, modification dates,
+# and so forth, you either need to use additional functions in the os.path module or use
+# the os.stat() function. To collect the data. For example:
+import os
+import os.path
+import glob
+import time
+
+pyfiles = glob.glob('*.py')
+name_sz_date = [(name, os.path.getsize(name), time.ctime(os.path.getmtime(name))) for name in pyfiles]
+for name, size, mtime in name_sz_date:
+    print(name, size, mtime)
+print('')
+# Alternative: Get file metadata
+file_metadata = [(name, os.stat(name)) for name in pyfiles]
+for name, meta in file_metadata:
+    print(name, meta.st_size, time.ctime(meta.st_mtime))
+
+
+# 5.14 Bypassing Filename Encoding
+
+# Problem
+# You want to perform file I/O operations using raw filenames that have not been decoded
+# or encoded according to the default filename encoding.
+
+# Solution
+# By default, all filenames are encoded and decoded according to the text encoding returned
+# by sys.getfilesystemencoding(). For example:
+print(sys.getfilesystemencoding())
+
+# If you want to bypass this encoding for some reason, specify a filename using a raw byte
+# string instead. For example:
+with open('jalape\xf1o.txt', 'w') as f:    # Write a file using a unicode filename
+    f.write('Spicy!')
+
+import os
+print(os.listdir('.'))      # Directory listing (decoded)
+
+# Directory listing (raw)
+print(os.listdir(b'.'))      # Note: byte string
+
+with open(b'jalape\xc3\xb1o.txt') as f:
+    print(f.read())
+
+
+# 5.15 Printing Bad Filenames
+# Problem
+# Your program received a directory listing, but when it tried to print the filenames, it
+# crashed with a UnicodeEncodeError exception and a cryptic message about “surrogates
+# not allowed.”
+
+# Solution
+# When printing filenames of unknown origin, use this convention to avoid errors:`
+def bad_filename(filename):
+    return repr(filename)[1:-1]
+
+filename='ab'
+try:
+    print(filename)
+except UnicodeEncodeError:
+    print(bad_filename(filename))
+
+
+# 5. 16 Adding or Changing the Encoding of an Already Open File
+
+# Problem
+# You want to add or change the Unicode encoding of an already open file without closing
+# it first.
+
+# Solution
+# If you want to add Unicode encoding/decoding to an already existing file object that’s
+# opened in binary mode, wrap it with an io.TextIOWrapper() object. For example:
+import urllib.request
+import io
+u = urllib.request.urlopen('http://www.python.org')
+f = io.TextIOWrapper(u, encoding='utf-8')
+text = f.read()
+# print(text)
+
+# If you want to change the encoding of an already open text-mode file, use its detach()
+# method to remove the existing text encoding layer before replacing it with a new one.
+# Here is an example of changing the encoding on sys.stdout:
+import sys
+print(sys.stdout.encoding)
+sys.stdout = io.TextIOWrapper(sys.stdout.detach(), encoding='latin-1')
+print(sys.stdout.encoding)
+
+f = open('merge_file.txt', 'w')
+print(f)
+print(f.buffer)
+print(f.buffer.raw)
+
+print('')
+f = open('sample.txt', 'w')
+print(f)
+f = io.TextIOWrapper(f.buffer, encoding='latin-1')
+print(f)
+try:
+    f.write('Hello')
+except ValueError as e:
+    print(e)
+# It doesn’t work because the original value of f got destroyed and closed the underlying
+# file in the process.
+
+# The detach() method disconnects the topmost layer of a file and returns the next lower
+# layer. Afterward, the top layer will no longer be usable. For example:
+print('')
+f = open('sample.txt', 'w')
+print(f)
+b = f.detach()
+print(b)
+try:
+    f.write('hello')
+except ValueError as e:
+    print(e)
+f = io.TextIOWrapper(b, encoding='latin-1')
+print(f)
+
+# Although changing the encoding has been shown, it is also possible to use this technique
+# to change the line handling, error policy, and other aspects of file handling. For example:
+sys.stdout = io.TextIOWrapper(sys.stdout.detach(), encoding='ascii', errors='xmlcharrefreplace')
+print('Jalape\u00f1o')
+
+
+# 5.17 Writing Bytes to a Text File
+
+# Problem
+# You want to write raw bytes to a file opened in text mode.
+
+# Solution
+# Simply write the byte data to the files underlying buffer. For example:
+import sys
+try:
+    sys.stdout.write(b'Hello\n')
+except TypeError as e:
+    print(e)
+
+sys.stdout.buffer.write(b'Hello\n')
+print('abc')
+
+# 5.18 Wrapping an Existing File Descriptior as a File Object
+
+# Open a low-level file descriptor
+import os
+fd = os.open('somefile.txt', os.O_WRONLY | os.O_CREAT)
+
+# Turn into a proper file
+f = open(fd, 'wt')
+f.write('hello world\n')
+f.close
+
+# When the high-level file object is closed or destroyed, the underlying file descriptor will
+# also be closed. If this is not desired, supply the optional closefd=False argument to
+# open(). For example:
+f = open(fd, 'wt', closefd=False)
+
+# Discussion
+# On Unix systems, this technique of wrapping a file descriptor can be a convenient means
+# for putting a file-like interface on an existing I/O channel that was opened in a different
+# way (e.g., pipes, sockets, etc.). For instance, here is an example involving sockets:
+from socket import socket, AF_INET, SOCK_STREAM
+
+def echo_chient(client_sock, addr):
+    print('Got connection from', addr)
+
+    # Make text-mode file wrappers for socket reading/writing
+    client_in = open(client_sock.fileno(), 'rt', encoding='latin-1', closefd=False)
+    client_out = open(client_sock.fileno(), 'wt', encoding='latin-1', closefd=False)
+
+    # Echo lines back to the client using file I/O
+    for line in client_in:
+        client_out.write(line)
+        client_out.flush()
+    client_sock.close()
+
+def echo_server(address):
+    sock = socket(AF_INET, SOCK_STREAM)
+    sock.bind(address)
+    sock.listen(1)
+    while True:
+        client, addr = sock.accept()
+        echo_client(client, addr)
+
+# 5.19 Makin Temporary Files and Directories
+from tempfile import TemporaryFile
+
+with TemporaryFile('w+t') as f:
+    # Read/Write to the file
+    f.write('Hello World\n')
+    f.write('Testing\n')
+
+    # Seek back to beginning and read the data
+    f.seek(0)
+    data = f.read()
+    print(data)
+# Temporary file is destoryed
+
+f = TemporaryFile('w+t')
+
+f.close()
+
+# with TemporaryFile('w+t', encoding='utf-8', errors='ignore') as f:
+#    pass
+
+from tempfile import NamedTemporaryFile
+with NamedTemporaryFile('w+t') as f:
+    print('filename is:', f.name)
+# File automatically destroyed
+
+# 5.20 Communicating with Serial Ports
+
+# 5.21 Serializing python Objects
+# Problem
+# You need to serialize a Python object into a byte stream so that you can do things such
+# as save it to a file, store it in a database, or transmit it over a network connection.
+
+# Solution
+# The most common approach for serializing data is to use the pickle module. To dump
+# an object to a file, you do this:
+
+# import pickle
+# data = ... # Some Python object
+# f = open('somefile', 'wb')
+# pickle.dump(data, f)
+
+# To dump an object to a string, use pickle.dumps():
+import pickle
+s = pickle.dumps(data)
+
+# To re-create an object from a byte stream, use either the pickle.load() or pick
+# le.loads() functions. For example:
+
+# Restore from a file
+import pickle
+
+#f = open('somefile.txt', 'rb')
+#data = pickle.load(f)
+# Restore from a string
+#data = pickle.loads(s)
+
+import pickle
+f = open('somedata', 'wb')
+pickle.dump([1, 2, 3, 4], f)
+pickle.dump('hello', f)
+pickle.dump({'Apple', 'Pear', 'Banana'}, f)
+f.close()
+f = open('somedata', 'rb')
+print(pickle.load(f))
+print(pickle.load(f))
+print(pickle.load(f))
+
+# You can pickle functions, classes, and instances, but the resulting data only encodes
+# name references to the associated code objects. For example:
+import math
+import pickle
+print(pickle.dumps(math.cos))
 
 
