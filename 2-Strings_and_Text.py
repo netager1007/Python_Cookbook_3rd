@@ -555,6 +555,7 @@ from collections import namedtuple
 
 master_pat = re.compile('|'.join([NAME, NUM, PLUS, TIMES, EQ, WS]))
 Token = namedtuple('Token', ['type', 'value'])
+
 def generate_tokens(pat, text):
     scanner = pat.scanner(text)
     for m in iter(scanner.match, None):

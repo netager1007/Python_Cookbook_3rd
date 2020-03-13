@@ -581,17 +581,18 @@ print(p2)
 
 # collections.namedtuple()
 from collections import namedtuple
+
 Subscriber = namedtuple('Subscriber', ['addr', 'joined'])
-print(Subscriber)
-sub = Subscriber('jonesy@example.com','2012-10-19')
-print(sub)
+sub = Subscriber('jonesy@example.com', '2012-10-19')
 print(sub.addr, sub.joined)
+
 print(len(sub))
 addr, joined = sub
 print(addr, joined)
 
 #
 from collections import namedtuple
+
 Stock = namedtuple('Stock', ['name', 'shares', 'price'])
 def compute_cost(records):
     total = 0.0
@@ -602,9 +603,11 @@ def compute_cost(records):
 
 s = Stock('ACME', 100, 123.45)
 print(s)
-#s.shares = 75    # Error Occured. Why namedtuple is immutable
+
+# s.shares = 75    # Error Occured. Why namedtuple is immutable
 s._replace(shares=75)     # _replace()
 print(s)
+
 s = s._replace(shares=75) # namedtuple() 값 변경 방법
 print(s)
 
@@ -613,6 +616,7 @@ from collections import namedtuple
 Stock = namedtuple('Stock', ['name', 'shares', 'price', 'date', 'time'])
 
 stock_prototype = Stock('', 0, 0.0, None, None)  # Create a prototype instance
+
 def dict_to_stock(s):
     return stock_prototype._replace(**s)
 
